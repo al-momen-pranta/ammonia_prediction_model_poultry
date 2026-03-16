@@ -1,6 +1,9 @@
 [build]
 builder = "nixpacks"
 
+[build.nixpacksPlan.variables]
+NIXPACKS_PYTHON_VERSION = "3.11"
+
 [deploy]
 startCommand = "gunicorn app:app --bind 0.0.0.0:$PORT"
 restartPolicyType = "on_failure"
