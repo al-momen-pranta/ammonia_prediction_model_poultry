@@ -20,7 +20,7 @@ model = tf.keras.Sequential([
 
 # ── Load weights ──────────────────────────────────────────────────────────────
 print("Loading weights...")
-model.load_weights("lstm_weights.weights.h5")
+model = tf.keras.models.load_model("lstm_fixed.keras", compile=False)
 print("Model ready.")
 
 # ── Load scalers ──────────────────────────────────────────────────────────────
