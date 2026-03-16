@@ -7,12 +7,26 @@ import tensorflow as tf
 
 app = Flask(__name__)
 
-print("Loading LSTM model...")
-model = tf.keras.models.load_model("lstm_nh3.keras")
-print("Model loaded.")
+# ── Build architecture (must match training exactly) ──────────────────────────
+print("Building LSTM model...")
+model = tf.keras.Sequential([
+    tf.keras.layers.LSTM(64, return_sequences=True, input_shape=(30, 3)),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.LSTM(32, return_sequences=False),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(16, activation='relu'),
+    tf.keras.layers.Dense(1)
+])
 
+# ── Load weights ──────────────────────────────────────────────────────────────
+print("Loading weights...")
+model.load_weights("lstm_weights.weights.h5")
+print("Model ready.")
+
+# ── Load scalers ──────────────────────────────────────────────────────────────
 with open("scaler_params.json") as f:
     scaler = json.load(f)
+
 with open("nh3_scaler_params.json") as f:
     nh3_scaler = json.load(f)
 
@@ -25,15 +39,21 @@ LOOKBACK   = 30
 N_FEATURES = 3
 THRESHOLD  = 10.0
 
+# ── Helpers ───────────────────────────────────────────────────────────────────
 def normalize(X):
     return X * DATA_SCALE + DATA_MINN
 
 def inverse_nh3(y):
     return (y - NH3_MINN) / NH3_SCALE
 
+# ── Routes ────────────────────────────────────────────────────────────────────
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "ok", "model": "LSTM NH3 Predictor", "usage": "POST /predict"})
+    return jsonify({
+        "status": "ok",
+        "model": "LSTM NH3 Predictor",
+        "usage": "POST /predict"
+    })
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -43,17 +63,28 @@ def health():
 def predict():
     try:
         data = request.get_json()
+
         if "readings" not in data:
             return jsonify({"error": "Missing 'readings'"}), 400
+
         readings = data["readings"]
+
         if len(readings) != LOOKBACK:
             return jsonify({"error": f"Need {LOOKBACK} readings, got {len(readings)}"}), 400
-        X = np.array([[r["nh3"], r["temp"], r["hum"]] for r in readings], dtype=np.float32)
+
+        X = np.array(
+            [[r["nh3"], r["temp"], r["hum"]] for r in readings],
+            dtype=np.float32
+        )
+
         X_scaled = normalize(X).reshape(1, LOOKBACK, N_FEATURES)
         y_scaled = model.predict(X_scaled, verbose=0)[0][0]
+
         predicted_ppm = float(inverse_nh3(y_scaled))
         predicted_ppm = max(0.0, round(predicted_ppm, 2))
+
         fan_action = "ON" if predicted_ppm > THRESHOLD else "OFF"
+
         return jsonify({
             "predicted_nh3_ppm": predicted_ppm,
             "threshold_ppm": THRESHOLD,
@@ -62,6 +93,7 @@ def predict():
             "current_nh3": readings[-1]["nh3"],
             "message": f"NH3 will reach {predicted_ppm} ppm in 30 min — Fan {fan_action}"
         })
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
