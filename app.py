@@ -10,7 +10,7 @@ print("Loading model...")
 # Load with custom objects to bypass time_major issue
 try:
     model = tf.keras.models.load_model(
-        "realistic_lstm_outputs/lstm_nh3.keras",
+        "lstm_weights.weights.h5",
         compile=False,
         safe_mode=False
     )
