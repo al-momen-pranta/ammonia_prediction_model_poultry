@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 # ── Load model ────────────────────────────────────────────────────────────────
 print("Loading LSTM model...")
-model = tf.keras.models.load_model("lstm_fixed.keras", compile=False)
+model = tf.keras.models.load_model("lstm_model.h5", compile=False)
 print("Model ready.")
 
 # ── Load scalers ──────────────────────────────────────────────────────────────
