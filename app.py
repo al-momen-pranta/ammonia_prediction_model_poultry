@@ -7,19 +7,8 @@ import tensorflow as tf
 
 app = Flask(__name__)
 
-# ── Build architecture (must match training exactly) ──────────────────────────
-print("Building LSTM model...")
-model = tf.keras.Sequential([
-    tf.keras.layers.LSTM(64, return_sequences=True, input_shape=(30, 3)),
-    tf.keras.layers.Dropout(0.2),
-    tf.keras.layers.LSTM(32, return_sequences=False),
-    tf.keras.layers.Dropout(0.2),
-    tf.keras.layers.Dense(16, activation='relu'),
-    tf.keras.layers.Dense(1)
-])
-
-# ── Load weights ──────────────────────────────────────────────────────────────
-print("Loading weights...")
+# ── Load model ────────────────────────────────────────────────────────────────
+print("Loading LSTM model...")
 model = tf.keras.models.load_model("lstm_fixed.keras", compile=False)
 print("Model ready.")
 
