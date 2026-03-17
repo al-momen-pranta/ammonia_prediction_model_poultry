@@ -26,7 +26,7 @@ NH3_MINN   = float(nh3_scaler["min"])
 
 LOOKBACK   = 30
 N_FEATURES = 3
-THRESHOLD  = 10.0
+THRESHOLD  = 20.0
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def normalize(X):
