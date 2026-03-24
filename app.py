@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import numpy as np
 import json
 import os
+from datetime import datetime
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 
@@ -74,16 +75,31 @@ def predict():
 
         fan_action = "ON" if predicted_ppm > THRESHOLD else "OFF"
 
+        current_nh3 = readings[-1]["nh3"]
+        current_temp = readings[-1]["temp"]
+        current_hum = readings[-1]["hum"]
+        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+
+        # ── Deploy log এ দেখা যাবে ───────────────────────────────────────────
+        print(f"[{timestamp}] PREDICT | "
+              f"NH3: {current_nh3:.1f} ppm | "
+              f"Temp: {current_temp:.1f}C | "
+              f"Hum: {current_hum:.1f}% | "
+              f"Predicted: {predicted_ppm:.2f} ppm | "
+              f"Threshold: {THRESHOLD} ppm | "
+              f"Fan: {fan_action}")
+
         return jsonify({
             "predicted_nh3_ppm": predicted_ppm,
             "threshold_ppm": THRESHOLD,
             "fan_action": fan_action,
             "alert": predicted_ppm > THRESHOLD,
-            "current_nh3": readings[-1]["nh3"],
+            "current_nh3": current_nh3,
             "message": f"NH3 will reach {predicted_ppm} ppm in 30 min — Fan {fan_action}"
         })
 
     except Exception as e:
+        print(f"[ERROR] {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
